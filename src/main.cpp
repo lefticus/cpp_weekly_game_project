@@ -1,4 +1,5 @@
 #include <iostream>
+#include <array>
 
 #include <spdlog/spdlog.h>
 #include <imgui.h>
