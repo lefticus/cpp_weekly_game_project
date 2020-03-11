@@ -55,7 +55,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] const char **argv)
   ImGui::GetStyle().ScaleAllSizes(scale_factor);
   ImGui::GetIO().FontGlobalScale = scale_factor;
 
-  std::array<bool, 12> states{};
+  std::array<bool, 13> states{};
 
   sf::Clock deltaClock;
   while (window.isOpen()) {
