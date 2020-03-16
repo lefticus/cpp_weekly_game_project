@@ -1,12 +1,3 @@
-additional_commands:
-  foo:
-    flags:
-    - BAR
-    - BAZ
-    kwargs:
-      DEPENDS: '*'
-      HEADERS: '*'
-      SOURCES: '*'
 bullet_char: '*'
 dangle_parens: false
 enum_char: .
