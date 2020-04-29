@@ -6,16 +6,6 @@ install:
 jobs:
   include:
     - os: osx
-      compiler: gcc
-      osx_image: xcode11.2    # includes gcc-9 by default
-      env:
-        # Conan is at: ${HOME}/Library/Python/2.7/bin: we need this in the path
-        - PATH="${HOME}/Library/Python/2.7/bin:${PATH}"
-        - GCC_VER="9"
-        - MATRIX_EVAL="CC=gcc-${GCC_VER} && CXX=g++-${GCC_VER}"
-      after_script:
-        - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER}
-    - os: osx
       compiler: clang
       osx_image: xcode11.2
       env:
