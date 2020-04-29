@@ -19,6 +19,7 @@ jobs:
       compiler: clang
       osx_image: xcode11.2
       env:
+        - MACOSX_DEPLOYMENT_TARGET=10.14
         - PATH="${HOME}/Library/Python/2.7/bin:${PATH}"
         - MATRIX_EVAL=""
     - os: linux
