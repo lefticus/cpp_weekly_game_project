@@ -6,19 +6,10 @@ install:
 jobs:
   include:
     - os: osx
-      compiler: gcc
-      osx_image: xcode11.2    # includes gcc-9 by default
-      env:
-        # Conan is at: ${HOME}/Library/Python/2.7/bin: we need this in the path
-        - PATH="${HOME}/Library/Python/2.7/bin:${PATH}"
-        - GCC_VER="9"
-        - MATRIX_EVAL="CC=gcc-${GCC_VER} && CXX=g++-${GCC_VER}"
-      after_script:
-        - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER}
-    - os: osx
       compiler: clang
       osx_image: xcode11.2
       env:
+        - MACOSX_DEPLOYMENT_TARGET=10.14
         - PATH="${HOME}/Library/Python/2.7/bin:${PATH}"
         - MATRIX_EVAL=""
     - os: linux
@@ -43,8 +34,8 @@ jobs:
       dist: bionic
       compiler: clang
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++"
-      addons: { apt: { packages: ['doxygen'] } }
+        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
+      addons: { apt: { packages: ['doxygen', 'clang-8'] } }
 
 
 before_script:
