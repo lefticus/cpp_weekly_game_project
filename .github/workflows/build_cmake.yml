@@ -31,7 +31,7 @@ jobs:
 
     - name: Install gcc-9
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r-test
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         sudo apt-get install gcc-9 g++-9
 
     - name: Configure CMake
