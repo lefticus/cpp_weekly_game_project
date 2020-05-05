@@ -10,7 +10,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
                                                "MinSizeRel" "RelWithDebInfo")
 endif()
 
-find_program(CCACHE ccache)
+find_program(CCACHE NAMES ccache sccache)
 if(CCACHE)
   message("using ccache")
   set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
