@@ -24,6 +24,35 @@ static constexpr auto USAGE =
           --scale=SCALE     Scaling factor [default: 2].
 )";
 
+
+struct Joystick
+{
+  unsigned int id;
+  std::string name;
+  std::array<bool, sf::Joystick::ButtonCount> buttonState;
+  std::array<float, sf::Joystick::AxisCount> axisPosition;
+};
+
+
+Joystick loadJoystick(unsigned int id)
+{
+  const auto identification = sf::Joystick::getIdentification(id);
+  return Joystick{ id, static_cast<std::string>(identification.name), {}, {} };
+}
+
+
+Joystick &joystickById(std::vector<Joystick> &joysticks, unsigned int id)
+{
+  auto joystick = std::find_if(begin(joysticks), end(joysticks), [id](const auto &j) { return j.id == id; });
+
+  if (joystick == joysticks.end()) {
+    joysticks.push_back(loadJoystick(id));
+    return joysticks.back();
+  } else {
+    return *joystick;
+  }
+}
+
 int main(int argc, const char **argv)
 {
   std::map<std::string, docopt::value> args = docopt::docopt(USAGE,
@@ -44,6 +73,7 @@ int main(int argc, const char **argv)
   }
 
 
+  spdlog::set_level(spdlog::level::debug);
   // Use the default logger (stdout, multi-threaded, colored)
   spdlog::info("Hello, {}!", "World");
 
@@ -61,8 +91,11 @@ int main(int argc, const char **argv)
     "Getting Started",
     "Finding Errors As Soon As Possible",
     "Handling Command Line Parameters",
+    "Reading SFML Joystick States",
+    "Reading SFML Keyboard States",
+    "Reading SFML Mouse States",
+    "Reading SFML Touchscreen States",
     "C++ 20 So Far",
-    "Reading SFML Input States",
     "Managing Game State",
     "Making Our Game Testable",
     "Making Game State Allocator Aware",
@@ -73,13 +106,53 @@ int main(int argc, const char **argv)
 
   std::array<bool, steps.size()> states{};
 
+
+  std::vector<Joystick> joySticks;
+
+
   sf::Clock deltaClock;
+
+  bool joystickEvent{false};
+
   while (window.isOpen()) {
     sf::Event event{};
     while (window.pollEvent(event)) {
       ImGui::SFML::ProcessEvent(event);
 
-      if (event.type == sf::Event::Closed) { window.close(); }
+      switch (event.type) {
+      case sf::Event::Closed:
+        window.close();
+        break;
+      case sf::Event::JoystickConnected: {
+        joystickEvent = true;
+        break;
+      }
+      case sf::Event::JoystickDisconnected: {
+        joystickEvent = true;
+        break;
+      }
+      case sf::Event::JoystickButtonPressed: {
+        auto &js = joystickById(joySticks, event.joystickButton.joystickId);
+        joystickEvent = true;
+        js.buttonState[event.joystickButton.button] = true;
+        break;
+      }
+      case sf::Event::JoystickButtonReleased: {
+        auto &js = joystickById(joySticks, event.joystickButton.joystickId);
+        joystickEvent = true;
+        js.buttonState[event.joystickButton.button] = false;
+        break;
+      }
+      case sf::Event::JoystickMoved: {
+        auto &js = joystickById(joySticks, event.joystickMove.joystickId);
+        joystickEvent = true;
+        js.axisPosition[event.joystickMove.axis] = event.joystickMove.position;
+        break;
+      }
+
+      default:
+        spdlog::trace("Unhandled Event Type");
+      }
     }
 
     ImGui::SFML::Update(window, deltaClock.restart());
@@ -92,6 +165,17 @@ int main(int argc, const char **argv)
       ++index;
     }
 
+    ImGui::End();
+
+    ImGui::Begin("Joystick");
+    
+    ImGui::TextUnformatted(fmt::format("JS Event: {}", joystickEvent).c_str());
+
+    if (!joySticks.empty()) {
+      for (std::size_t button = 0; button < sf::Joystick::ButtonCount; ++button) {
+        ImGui::TextUnformatted(fmt::format("{}: {}", button, joySticks[0].buttonState[button]).c_str());
+      }
+    }
 
     ImGui::End();
 
