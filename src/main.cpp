@@ -9,8 +9,11 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
 
-
 #include <docopt/docopt.h>
+
+#include "Input.hpp"
+#include "ImGuiHelpers.hpp"
+
 
 static constexpr auto USAGE =
   R"(C++ Weekly Game.
@@ -25,33 +28,6 @@ static constexpr auto USAGE =
 )";
 
 
-struct Joystick
-{
-  unsigned int id;
-  std::string name;
-  std::array<bool, sf::Joystick::ButtonCount> buttonState;
-  std::array<float, sf::Joystick::AxisCount> axisPosition;
-};
-
-
-Joystick loadJoystick(unsigned int id)
-{
-  const auto identification = sf::Joystick::getIdentification(id);
-  return Joystick{ id, static_cast<std::string>(identification.name), {}, {} };
-}
-
-
-Joystick &joystickById(std::vector<Joystick> &joysticks, unsigned int id)
-{
-  auto joystick = std::find_if(begin(joysticks), end(joysticks), [id](const auto &j) { return j.id == id; });
-
-  if (joystick == joysticks.end()) {
-    joysticks.push_back(loadJoystick(id));
-    return joysticks.back();
-  } else {
-    return *joystick;
-  }
-}
 
 int main(int argc, const char **argv)
 {
@@ -92,6 +68,8 @@ int main(int argc, const char **argv)
     "Finding Errors As Soon As Possible",
     "Handling Command Line Parameters",
     "Reading SFML Joystick States",
+    "Displaying Joystick States",
+    "Dealing With Game Events",
     "Reading SFML Keyboard States",
     "Reading SFML Mouse States",
     "Reading SFML Touchscreen States",
@@ -107,7 +85,7 @@ int main(int argc, const char **argv)
   std::array<bool, steps.size()> states{};
 
 
-  std::vector<Joystick> joySticks;
+  std::vector<Game::Joystick> joySticks;
 
 
   sf::Clock deltaClock;
@@ -169,11 +147,16 @@ int main(int argc, const char **argv)
 
     ImGui::Begin("Joystick");
     
-    ImGui::TextUnformatted(fmt::format("JS Event: {}", joystickEvent).c_str());
+    ImGuiHelper::Text("JS Event: {}", joystickEvent);
 
     if (!joySticks.empty()) {
-      for (std::size_t button = 0; button < sf::Joystick::ButtonCount; ++button) {
-        ImGui::TextUnformatted(fmt::format("{}: {}", button, joySticks[0].buttonState[button]).c_str());
+      for (std::size_t button = 0; button < joySticks[0].buttonCount; ++button) {
+        ImGuiHelper::Text("{}: {}", button, joySticks[0].buttonState[button]);
+      }
+
+      for (std::size_t axis = 0; axis < sf::Joystick::AxisCount; ++axis)
+      {
+        ImGuiHelper::Text("{}: {}", Game::toString(static_cast<sf::Joystick::Axis>(axis)), joySticks[0].axisPosition[axis]);
       }
     }
 
