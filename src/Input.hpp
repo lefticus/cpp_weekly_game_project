@@ -78,10 +78,10 @@ struct GameState
   {
     auto joystick = std::find_if(begin(joysticks), end(joysticks), [id](const auto &j) { return j.id == id; });
 
-    if (joystick == joysticks.end()) {
+    if (joystick == joysticks.end()) [[unlikely]] {
       joysticks.push_back(loadJoystick(id));
       return joysticks.back();
-    } else {
+    } else [[likely]] {
       return *joystick;
     }
   }
