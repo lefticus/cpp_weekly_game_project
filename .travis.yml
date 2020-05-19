@@ -1,10 +1,13 @@
 language: cpp
-
+python:
+  - 3.8
+  
 install:
   - which pip
   - ls -al `which pip`*
   - pip --version
-  - pip3 install --user conan cmake
+  - pip install --user conan cmake
+  
 
 jobs:
   include:
