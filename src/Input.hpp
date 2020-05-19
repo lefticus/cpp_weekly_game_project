@@ -10,6 +10,7 @@
 #include <array>
 #include <variant>
 #include <chrono>
+#include <optional>
 
 
 namespace Game {
