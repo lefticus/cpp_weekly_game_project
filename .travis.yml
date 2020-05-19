@@ -28,6 +28,7 @@ jobs:
             - gcc-9
             - g++-9
             - doxygen
+            - python3
       after_script:
         - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER}
     - os: linux
