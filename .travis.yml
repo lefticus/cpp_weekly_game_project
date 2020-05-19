@@ -3,12 +3,6 @@ python:
   - 3.8
   
 install:
-  - which pip
-  - which pip3
-  - ls -al `which pip`*
-  - pip --version
-  - pyenv versions
-  - pyenv global 3.8
   - pip3 --version
   - pip3 install --user conan cmake
   
@@ -25,7 +19,8 @@ jobs:
     - os: linux
       dist: bionic
       compiler: gcc
-      python: 3.8
+      before_install: 
+        - pyenv global 3.8
       env:
         - GCC_VER="9"
         - MATRIX_EVAL="CC=gcc-${GCC_VER} && CXX=g++-${GCC_VER}"
@@ -46,7 +41,8 @@ jobs:
     - os: linux
       dist: bionic
       compiler: clang
-      python: 3.8
+      before_install: 
+        - pyenv global 3.8
       env:
         - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
       addons: { apt: { packages: ['doxygen', 'clang-8'] } }
