@@ -46,9 +46,17 @@ jobs:
     - os: linux
       dist: bionic
       compiler: clang
+      before_script:
+        # Add LLVM repo and GPG key before installing clang-10
+        - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        - echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main" | sudo tee -a /etc/apt/sources.list
+        - sudo apt-get -qq update
+        - sudo apt-get -y install clang-10
+        - eval "${MATRIX_EVAL}"
       env:
-        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
-      addons: { apt: { packages: ['doxygen', 'clang-8'] } }
+        - CLANG_VER="10"
+        - MATRIX_EVAL="CC=clang-${CLANG_VER} && CXX=clang++-${CLANG_VER}"
+      addons: { apt: { packages: ['doxygen'] } }
 
 
 before_script:
