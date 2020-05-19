@@ -7,6 +7,8 @@ install:
   - which pip3
   - ls -al `which pip`*
   - pip --version
+  - pyenv versions
+  - pyenv global 3.8
   - pip3 --version
   - pip3 install --user conan cmake
   
