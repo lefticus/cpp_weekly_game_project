@@ -14,7 +14,7 @@ jobs:
       osx_image: xcode11.2
       env:
         - MACOSX_DEPLOYMENT_TARGET=10.14
-        - PATH="${HOME}/Library/Python/2.7/bin:${PATH}"
+        - PATH="${HOME}/Library/Python/3.7/bin:${PATH}"
         - MATRIX_EVAL=""
     - os: linux
       dist: bionic
