@@ -59,8 +59,8 @@ before_script:
   - eval "${MATRIX_EVAL}"
   
   # Fail if we are using the wrong Python
-  - python --version | grep 3
-  - pip --version | grep -E 'python\s*3'
+  - python --version | grep -iE 'python\s*3'
+  - pip    --version | grep -iE 'python\s*3'
   
   # Install Conan using Python 3.
   - pip install conan cmake
