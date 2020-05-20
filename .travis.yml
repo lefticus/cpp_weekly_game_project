@@ -8,11 +8,6 @@ jobs:
       env:
         - MACOSX_DEPLOYMENT_TARGET=10.14
         - MATRIX_EVAL=""
-      install:  # Overrides install step below
-        # pyenv doesn't exist on this CI image, so use virtualenv to set Python version
-        - pip3 install virtualenv
-        - virtualenv -p python3 ~/venv
-        - source ~/venv/bin/activate
 
     - os: linux
       dist: bionic
@@ -45,19 +40,21 @@ jobs:
         - MATRIX_EVAL="CC=clang-${CLANG_VER} && CXX=clang++-${CLANG_VER}"
       addons: { apt: { packages: ['doxygen'] } }
 
-before_install:
+before_install: skip
   # Empty. We are using this step to add sources (as in addons/apt/sources) 
   # that Travis disallows, for example, the LLVM repo.
 
-install:
-  # Set default version of Python to 3: some Conan packages require this.
-  # This must occur before "before_script"
-  - pyenv global 3.7
+install: skip
 
 before_script:
   # Set CC and CXX
   - eval "${MATRIX_EVAL}"
-  
+
+  # Set default version of Python to 3: works the same way on Mac and Linux
+  - pip install virtualenv
+  - virtualenv -p python3 ~/venv
+  - source ~/venv/bin/activate
+
   # Fail if we are using the wrong Python
   - python --version | grep -iE 'python\s*3'
   - pip    --version | grep -iE 'python\s*3'
