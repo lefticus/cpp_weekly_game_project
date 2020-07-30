@@ -13,6 +13,7 @@
 
 #include "Input.hpp"
 #include "ImGuiHelpers.hpp"
+#include "Utility.hpp"
 
 
 static constexpr auto USAGE =
@@ -27,12 +28,6 @@ static constexpr auto USAGE =
           --scale=SCALE     Scaling factor [default: 2].
 )";
 
-
-template<class... Ts> struct overloaded : Ts...
-{
-  using Ts::operator()...;
-};
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 int main(int argc, const char **argv)
 {
@@ -89,42 +84,45 @@ int main(int argc, const char **argv)
 
   std::array<bool, steps.size()> states{};
 
-  sf::Clock deltaClock;
-
   Game::GameState gs;
 
   while (window.isOpen()) {
-    sf::Event event{};
 
-    std::vector<Game::GameState::Event> events;
+    const auto event = gs.nextEvent(window);
 
-    while (window.pollEvent(event)) {
-      ImGui::SFML::ProcessEvent(event);
-      events.push_back(gs.processEvent(event));
+    if (const auto sfmlEvent = Game::GameState::toSFMLEvent(event); sfmlEvent) {
+      ImGui::SFML::ProcessEvent(*sfmlEvent);
     }
-
-    const auto timeElapsed = deltaClock.restart();
-    ImGui::SFML::Update(window, timeElapsed);
-
-    gs.msElapsed = std::chrono::milliseconds{timeElapsed.asMilliseconds()};
-
 
     bool joystickEvent = false;
-    for (const auto &gameEvent : events) {
-      std::visit(overloaded{
-                   [&](const Game::GameState::Joystick &) {
-                     joystickEvent = true;
-                     // move character or something?!
-                   },
-                   [&](const Game::GameState::CloseWindow &) {
-                     window.close();
-                   },
-                   [&](const std::nullopt_t &) {
 
-                   }
-                 }, gameEvent);
+    bool timeElapsed = false;
+
+    std::visit(Game::overloaded{
+                 [&](const Game::JoystickEvent auto &jsEvent)
+                 {
+                   gs.update(jsEvent);
+                   joystickEvent = true;
+                 },
+                 [&](const Game::GameState::CloseWindow & /*unused*/) { window.close(); },
+                 [&](const Game::GameState::TimeElapsed &te) {
+                   ImGui::SFML::Update(window, te.toSFMLTime());
+                   timeElapsed = true;
+                 },
+                 [&](const std::monostate & /*unused*/) {
+
+                 },
+                 [&](const auto & /*do nothing*/) {}
+
+               },
+      event);
+
+
+    if (!timeElapsed) {
+      // todo: something more with a linear flow here
+      // right now this is just saying "no reason to update the render yet"
+      continue;
     }
-
 
 
     ImGui::Begin("The Plan");
