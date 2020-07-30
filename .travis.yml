@@ -1,7 +1,15 @@
 language: cpp
-
+python:
+  - 3.8
+  
 install:
-  - pip install --user conan cmake
+  - which pip
+  - which pip3
+  - ls -al `which pip`*
+  - pip --version
+  - pip3 --version
+  - pip3 install --user conan cmake
+  
 
 jobs:
   include:
@@ -28,6 +36,8 @@ jobs:
             - gcc-9
             - g++-9
             - doxygen
+            - python3
+            - python3.8
       after_script:
         - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER}
     - os: linux
