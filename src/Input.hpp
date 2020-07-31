@@ -5,11 +5,15 @@
 #ifndef MYPROJECT_INPUT_HPP
 #define MYPROJECT_INPUT_HPP
 
+#include <SFML/System/Time.hpp>
+#include <SFML/Window/Event.hpp>
 #include <SFML/Window/Joystick.hpp>
-#include <string>
+#include <SFML/Window/Keyboard.hpp>
 #include <array>
-#include <variant>
 #include <chrono>
+#include <string>
+#include <thread>
+#include <variant>
 
 #include "Utility.hpp"
 
@@ -40,82 +44,117 @@ constexpr std::string_view toString(const sf::Joystick::Axis axis)
 
 struct GameState
 {
+
   using clock = std::chrono::steady_clock;
   clock::time_point lastTick{ clock::now() };
 
   template<typename Source> struct Pressed
   {
-    Source source;
+    constexpr static std::string_view name{ "Pressed" };
+    constexpr static std::array       elements{ std::string_view{ "source" } };
+    Source                            source;
   };
 
   template<typename Source> struct Released
   {
-    Source source;
+    constexpr static std::string_view name{ "Released" };
+    constexpr static std::array       elements{ std::string_view{ "source" } };
+    Source                            source;
   };
 
   template<typename Source> struct Moved
   {
-    Source source;
+    constexpr static std::string_view name{ "Moved" };
+    constexpr static std::array       elements{ std::string_view{ "source" } };
+    Source                            source;
   };
 
   struct JoystickButton
   {
-    unsigned int id;
-    unsigned int button;
+    constexpr static std::string_view name{ "JoystickButton" };
+    constexpr static auto             elements = std::to_array<std::string_view>({ "id", "button" });
+    unsigned int                      id;
+    unsigned int                      button;
   };
 
   struct JoystickAxis
   {
-    unsigned int id;
-    unsigned int axis;
-    float position;
+    constexpr static std::string_view name{ "JoystickAxis" };
+    constexpr static auto             elements = std::to_array<std::string_view>({ "id", "axis", "position" });
+    unsigned int                      id;
+    unsigned int                      axis;
+    float                             position;
   };
 
   struct Mouse
   {
-    int x;
-    int y;
+    constexpr static std::string_view name{ "Mouse" };
+    constexpr static auto             elements = std::to_array<std::string_view>({ "x", "y" });
+    int                               x;
+    int                               y;
   };
 
   struct MouseButton
   {
-    int button;
-    Mouse mouse;
+    constexpr static std::string_view name{ "MouseButton" };
+    constexpr static auto             elements = std::to_array<std::string_view>({ "button", "mouse" });
+    int                               button;
+    Mouse                             mouse;
   };
 
   struct Key
   {
-    bool alt;
-    bool control;
-    bool system;
-    bool shift;
-    sf::Keyboard::Key key;
+    constexpr static std::string_view name{ "Key" };
+    constexpr static auto elements = std::to_array<std::string_view>({ "alt", "control", "system", "shift", "key" });
+    bool                  alt;
+    bool                  control;
+    bool                  system;
+    bool                  shift;
+    sf::Keyboard::Key     key;
+  };
+
+  struct CloseWindow
+  {
+    constexpr static std::string_view                name{ "CloseWindow" };
+    constexpr static std::array<std::string_view, 0> elements{};
+  };
+
+  struct TimeElapsed
+  {
+    constexpr static std::string_view name{ "TimeElapsed" };
+    constexpr static auto             elements = std::to_array<std::string_view>({ "elapsed" });
+    clock::duration                   elapsed;
+
+    [[nodiscard]] sf::Time toSFMLTime() const
+    {
+      return sf::microseconds(duration_cast<std::chrono::microseconds>(elapsed).count());
+    }
   };
 
 
   struct Joystick
   {
-    unsigned int id;
-    unsigned int buttonCount;
+    unsigned int                                id;
+    unsigned int                                buttonCount;
     std::array<bool, sf::Joystick::ButtonCount> buttonState;
-    std::array<float, sf::Joystick::AxisCount> axisPosition;
+    std::array<float, sf::Joystick::AxisCount>  axisPosition;
   };
 
   void update(const Pressed<JoystickButton> &button)
   {
-    auto &js = joystickById(joySticks, button.source.id);
+    auto &js                             = joystickById(joySticks, button.source.id);
     js.buttonState[button.source.button] = true;
   }
 
   void update(const Released<JoystickButton> &button)
   {
-    auto &js = joystickById(joySticks, button.source.id);
+    auto &js                             = joystickById(joySticks, button.source.id);
     js.buttonState[button.source.button] = false;
   }
 
   void update(const Moved<JoystickAxis> &button)
   {
-    auto &js = joystickById(joySticks, button.source.id);
+    auto &js                            = joystickById(joySticks, button.source.id);
     js.axisPosition[button.source.axis] = button.source.position;
   }
 
@@ -137,7 +176,7 @@ struct GameState
   static Joystick loadJoystick(unsigned int id)
   {
     const auto identification = sf::Joystick::getIdentification(id);
-    Joystick js{ id, sf::Joystick::getButtonCount(id), {}, {} };
+    Joystick   js{ id, sf::Joystick::getButtonCount(id), {}, {} };
     refreshJoystick(js);
 
     return js;
@@ -156,32 +195,18 @@ struct GameState
     }
   }
 
-  struct CloseWindow
-  {
-  };
-
-  struct TimeElapsed
-  {
-    clock::duration elapsed;
-
-    [[nodiscard]] sf::Time toSFMLTime() const
-    {
-      return sf::microseconds(duration_cast<std::chrono::microseconds>(elapsed).count());
-    }
-  };
-
 
   using Event = std::variant<std::monostate,
-    Pressed<Key>,
-    Released<Key>,
-    Pressed<JoystickButton>,
-    Released<JoystickButton>,
-    Moved<JoystickAxis>,
-    Moved<Mouse>,
-    Pressed<MouseButton>,
-    Released<MouseButton>,
-    CloseWindow,
-    TimeElapsed>;
+                             Pressed<Key>,
+                             Released<Key>,
+                             Pressed<JoystickButton>,
+                             Released<JoystickButton>,
+                             Moved<JoystickAxis>,
+                             Moved<Mouse>,
+                             Pressed<MouseButton>,
+                             Released<MouseButton>,
+                             CloseWindow,
+                             TimeElapsed>;
 
 
   static sf::Event::KeyEvent toSFMLEventInternal(const Key &key)
@@ -255,20 +280,42 @@ struct GameState
   {
     return std::visit(
       overloaded{ [&](const auto &value) -> std::optional<sf::Event> { return toSFMLEventInternal(value); },
-        [&](const TimeElapsed &) -> std::optional<sf::Event> { return {}; },
-        [&](const std::monostate &) -> std::optional<sf::Event> { return {}; } },
+                  [&](const TimeElapsed &) -> std::optional<sf::Event> { return {}; },
+                  [&](const std::monostate &) -> std::optional<sf::Event> { return {}; } },
       event);
   }
 
+  std::vector<Event> pendingEvents;
+
+  void setEvents(std::vector<Event> events) {
+    pendingEvents = std::move(events);
+  }
 
   Event nextEvent(sf::RenderWindow &window)
   {
+    if (!pendingEvents.empty()) {
+      auto event = pendingEvents.front();
+      pendingEvents.erase(pendingEvents.begin());
+
+      std::visit(overloaded{
+                   [](const TimeElapsed &te) {
+                     std::this_thread::sleep_for(te.elapsed);
+                   },
+                   [&](const Moved<Mouse> &me) {
+                     sf::Mouse::setPosition({me.source.x, me.source.y}, window);
+                   },
+                   [](const auto &) { }
+                 },
+                 event);
+      return event;
+    }
+
     sf::Event event{};
     if (window.pollEvent(event)) { return toEvent(event); }
 
-    const auto nextTick = clock::now();
+    const auto nextTick    = clock::now();
     const auto timeElapsed = nextTick - lastTick;
-    lastTick = nextTick;
+    lastTick               = nextTick;
 
     return TimeElapsed{ timeElapsed };
   }
@@ -307,11 +354,188 @@ struct GameState
 
 template<typename T>
 concept JoystickEvent =
-  std::is_same_v<T,
+  std::is_same_v<
+    T,
     GameState::Pressed<
-      GameState::JoystickButton>> || std::is_same_v<T, GameState::Released<GameState::JoystickButton>> || std::is_same_v<T, GameState::Moved<GameState::JoystickAxis>>
-;
+      GameState::
+        JoystickButton>> || std::is_same_v<T, GameState::Released<GameState::JoystickButton>> || std::is_same_v<T, GameState::Moved<GameState::JoystickAxis>>;
+}// namespace Game
+
+namespace nlohmann {
+template<> struct adl_serializer<Game::GameState::clock::duration>
+{
+  static void to_json(nlohmann::json &j, const Game::GameState::clock::duration &duration)
+  {
+    j = nlohmann::json{ { "nanoseconds", std::chrono::nanoseconds{duration}.count() } };
+  }
+
+  static void from_json(const nlohmann::json &j, Game::GameState::clock::duration &duration)
+  {
+    std::uint64_t value = j.at("nanoseconds");
+    duration = std::chrono::nanoseconds{value};
+  }
+};
+
+template<> struct adl_serializer<sf::Keyboard::Key>
+{
+  static void to_json(nlohmann::json &j, const sf::Keyboard::Key k)
+  {
+    j = nlohmann::json{ { "keycode", static_cast<int>(k) } };
+  }
+
+  static void from_json(const nlohmann::json &j, sf::Keyboard::Key &k)
+  {
+    k = static_cast<sf::Keyboard::Key>(j.at("keycode").get<int>());
+  }
+};
+
+
+}// namespace nlohmann
+
+namespace Game {
+template<typename EventType, typename... Param> void serialize(nlohmann::json &j, const Param &... param)
+{
+  auto make_inner = [&]() {
+    nlohmann::json innerObj;
+    std::size_t    index = 0;
+
+    (innerObj.emplace(EventType::elements[index++], param), ...);
+
+    return innerObj;
+  };
+
+  nlohmann::json outerObj;
+  outerObj.emplace(EventType::name, make_inner());
+  j = outerObj;
+}
+
+template<typename EventType>
+void to_json(nlohmann::json &j, const EventType & /*event*/) requires(EventType::elements.empty())
+{
+  serialize<EventType>(j);
+}
+
+template<typename EventType>
+void to_json(nlohmann::json &j, const EventType &event) requires(EventType::elements.size() == 1)
+{
+  const auto &[elem0] = event;
+  serialize<EventType>(j, elem0);
+}
+
+template<typename EventType>
+void to_json(nlohmann::json &j, const EventType &event) requires(EventType::elements.size() == 2)
+{
+  const auto &[elem0, elem1] = event;
+  serialize<EventType>(j, elem0, elem1);
+}
+
+template<typename EventType>
+void to_json(nlohmann::json &j, const EventType &event) requires(EventType::elements.size() == 3)
+{
+  const auto &[elem0, elem1, elem2] = event;
+  serialize<EventType>(j, elem0, elem1, elem2);
+}
+
+template<typename EventType>
+void to_json(nlohmann::json &j, const EventType &event) requires(EventType::elements.size() == 4)
+{
+  const auto &[elem0, elem1, elem2, elem3] = event;
+  serialize<EventType>(j, elem0, elem1, elem2, elem3);
+}
+
+template<typename EventType>
+void to_json(nlohmann::json &j, const EventType &event) requires(EventType::elements.size() == 5)
+{
+  const auto &[elem0, elem1, elem2, elem3, elem4] = event;
+  serialize<EventType>(j, elem0, elem1, elem2, elem3, elem4);
+}
+
+template<typename EventType, typename... Param> void deserialize(const nlohmann::json &j, Param &... param)
+{
+  // annoying conversion to string necessary for key lookup with .at?
+  const auto &top = j.at(std::string{EventType::name});
+
+  if (top.size() != sizeof...(Param)) {
+    throw std::logic_error("Deserialization size mismatch");
+  }
+
+  std::size_t cur_elem = 0;
+  (top.at(std::string{EventType::elements[cur_elem++]}).get_to(param), ...);
+}
+
+template<typename EventType>
+void from_json(const nlohmann::json &j, EventType &/**/) requires(EventType::elements.size() == 0)
+{
+  deserialize<EventType>(j);
+}
+
+template<typename EventType>
+void from_json(const nlohmann::json &j, EventType &event) requires(EventType::elements.size() == 1)
+{
+  auto &[elem0] = event;
+  deserialize<EventType>(j, elem0);
+}
+
+template<typename EventType>
+void from_json(const nlohmann::json &j, EventType &event) requires(EventType::elements.size() == 2)
+{
+  auto &[elem0, elem1] = event;
+  deserialize<EventType>(j, elem0, elem1);
+}
+
+template<typename EventType>
+void from_json(const nlohmann::json &j, EventType &event) requires(EventType::elements.size() == 3)
+{
+  auto &[elem0, elem1, elem2] = event;
+  deserialize<EventType>(j, elem0, elem1, elem2);
+}
+
+template<typename EventType>
+void from_json(const nlohmann::json &j, EventType &event) requires(EventType::elements.size() == 4)
+{
+  auto &[elem0, elem1, elem2, elem3] = event;
+  deserialize<EventType>(j, elem0, elem1, elem2, elem3);
+}
+
+template<typename EventType>
+void from_json(const nlohmann::json &j, EventType &event) requires(EventType::elements.size() == 5)
+{
+  auto &[elem0, elem1, elem2, elem3, elem4] = event;
+  deserialize<EventType>(j, elem0, elem1, elem2, elem3, elem4);
+}
+
+template<typename ... T>
+void choose_variant(const nlohmann::json &j, std::variant<std::monostate, T...> &variant)
+{
+  bool matched = false;
+
+  auto try_variant = [&]<typename Variant>(){
+    if (!matched) {
+      try {
+        Variant obj;
+        from_json(j, obj);
+        variant = obj;
+        matched = true;
+      } catch (const std::exception &) {
+        // parse error, continue
+      }
+    }
+  };
+
+  (try_variant.template operator()<T>(), ...);
+}
+
+void from_json(const nlohmann::json &j, Game::GameState::Event &event)
+{
+  choose_variant(j, event);
+}
+
+void to_json(nlohmann::json &j, const Game::GameState::Event &event)
+{
+  std::visit(Game::overloaded{ [](const std::monostate &) {}, [&j](const auto &e) { to_json(j, e); } }, event);
+}
 
 }// namespace Game
+
 
 #endif// MYPROJECT_INPUT_HPP
