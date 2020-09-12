@@ -298,8 +298,10 @@ struct GameState
       pendingEvents.erase(pendingEvents.begin());
 
       std::visit(overloaded{
-                   [](const TimeElapsed &te) {
-                     std::this_thread::sleep_for(te.elapsed);
+                   [&](const TimeElapsed &te) {
+                     const auto timeElapsed = clock::now() - lastTick;
+                     std::this_thread::sleep_for(te.elapsed - timeElapsed);
+                     lastTick += te.elapsed;
                    },
                    [&](const Moved<Mouse> &me) {
                      sf::Mouse::setPosition({me.source.x, me.source.y}, window);
