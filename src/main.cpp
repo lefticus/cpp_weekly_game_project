@@ -103,17 +103,18 @@ int main(int argc, const char **argv)
 
   std::uint64_t eventsProcessed{ 0 };
 
-  std::vector<Game::GameState::Event> events{ Game::GameState::TimeElapsed{} };
+  std::vector<Game::GameState::Event> events{ Game::GameState::TimeElapsed{}, Game::GameState::TimeElapsed{} };
 
   while (window.isOpen()) {
 
     const auto event = gs.nextEvent(window);
 
-    std::visit(Game::overloaded{ [](Game::GameState::TimeElapsed &prev, const Game::GameState::TimeElapsed &next) {
+    std::visit(Game::overloaded{ [](Game::GameState::TimeElapsed &/*prevPrev*/, Game::GameState::TimeElapsed &prev, const Game::GameState::TimeElapsed &next) {
                                   prev.elapsed += next.elapsed;
                                 },
-                                 [&](const auto & /*prev*/, const std::monostate &) {},
-                                 [&](const auto & /*prev*/, const auto &next) { events.push_back(next); } },
+                                 [&](const auto & /*prev*/, const auto & /*prev*/, const std::monostate &) {},
+                                 [&](const auto & /*prev*/, const auto & /*prev*/, const auto &next) { events.push_back(next); } },
+               *std::prev(events.end(),2),
                events.back(),
                event);
 
