@@ -131,6 +131,15 @@ struct GameState
     }
   };
 
+  struct InitialConfiguration
+  {
+    constexpr static std::string_view name{ "InitialConfiguration" };
+    constexpr static auto             elements = std::to_array<std::string_view>({ "width", "height", "scale", "imgui" });
+    long                              width;
+    long                              height;
+    long                              scale;
+    std::string                       imgui;
+  };
 
   struct Joystick
   {
@@ -206,7 +215,8 @@ struct GameState
                              Pressed<MouseButton>,
                              Released<MouseButton>,
                              CloseWindow,
-                             TimeElapsed>;
+                             TimeElapsed,
+                             InitialConfiguration>;
 
 
   static sf::Event::KeyEvent toSFMLEventInternal(const Key &key)
@@ -280,6 +290,7 @@ struct GameState
   {
     return std::visit(
       overloaded{ [&](const auto &value) -> std::optional<sf::Event> { return toSFMLEventInternal(value); },
+                  [&](const InitialConfiguration &) -> std::optional<sf::Event> { return {}; },
                   [&](const TimeElapsed &) -> std::optional<sf::Event> { return {}; },
                   [&](const std::monostate &) -> std::optional<sf::Event> { return {}; } },
       event);

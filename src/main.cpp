@@ -39,9 +39,9 @@ int main(int argc, const char **argv)
                                                              true,// show help if requested
                                                              "Game 0.0");// version string
 
-  const auto width  = args["--width"].asLong();
-  const auto height = args["--height"].asLong();
-  const auto scale  = args["--scale"].asLong();
+  auto width  = args["--width"].asLong();
+  auto height = args["--height"].asLong();
+  auto scale  = args["--scale"].asLong();
 
   std::vector<Game::GameState::Event> initialEvents;
   if (args["--replay"]) {
@@ -49,6 +49,23 @@ int main(int argc, const char **argv)
     std::ifstream  ifs(eventFile);
     const auto j = nlohmann::json::parse(ifs);
     initialEvents = j.get<std::vector<Game::GameState::Event>>();
+
+    auto event = initialEvents.front();
+
+    std::visit(Game::overloaded{
+                   [&](const Game::GameState::InitialConfiguration &ic) {
+                     width = ic.width;
+                     height = ic.height;
+                     scale = ic.scale;
+
+                     std::ofstream ofs{ "imgui.ini" };
+                     ofs << ic.imgui;
+
+                     initialEvents.erase(initialEvents.begin());
+                   },
+                   [](const auto &) { }
+                 },
+                 event);
   }
 
 
@@ -103,8 +120,14 @@ int main(int argc, const char **argv)
 
   std::uint64_t eventsProcessed{ 0 };
 
-  std::vector<Game::GameState::Event> events{ Game::GameState::TimeElapsed{}, Game::GameState::TimeElapsed{} };
-
+  std::string imgui;
+  {
+    std::ifstream f("imgui.ini", std::ios::binary); 
+    std::vector<char> v(std::istreambuf_iterator<char>{f}, {});
+    imgui= std::string(v.begin(), v.end());
+  }
+  std::vector<Game::GameState::Event> events{ Game::GameState::InitialConfiguration{width, height, scale, imgui}, Game::GameState::TimeElapsed{} };
+  
   while (window.isOpen()) {
 
     const auto event = gs.nextEvent(window);
