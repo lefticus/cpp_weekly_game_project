@@ -14,15 +14,15 @@ jobs:
   include:
     - os: osx
       compiler: clang
-      osx_image: xcode11.2
+      osx_image: xcode12.2    # Let's hope this gets us a more current clang
       env:
-        - MACOSX_DEPLOYMENT_TARGET=10.14
+        - MACOSX_DEPLOYMENT_TARGET=10.15
         - MATRIX_EVAL=""
     - os: linux
       dist: bionic
       compiler: gcc
       env:
-        - GCC_VER="9"
+        - GCC_VER="10"
         - MATRIX_EVAL="CC=gcc-${GCC_VER} && CXX=g++-${GCC_VER}"
 
       addons:
@@ -30,9 +30,8 @@ jobs:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            # I couldn't get ${GCC_VER} in here successfully
-            - gcc-9
-            - g++-9
+            - gcc-10
+            - g++-10
             - doxygen
             - python3-pip
       after_script:
@@ -41,8 +40,18 @@ jobs:
       dist: bionic
       compiler: clang
       env:
-        - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
-      addons: { apt: { packages: ['doxygen', 'clang-8'] } }
+        - LLVM_VER="11"
+        - MATRIX_EVAL="CC=clang-${LLVM_VER} && CXX=clang++-${LLVM_VER}"
+      addons:
+        apt:
+          sources:
+            - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-${LLVM_VER} main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
+          packages:
+            - clang-11
+            - clang++-11
+            - doxygen
+            - python3-pip
 
 
 before_script:
