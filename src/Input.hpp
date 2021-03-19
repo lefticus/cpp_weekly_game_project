@@ -11,6 +11,7 @@
 #include <SFML/Window/Keyboard.hpp>
 #include <array>
 #include <chrono>
+#include <optional>
 #include <string>
 #include <thread>
 #include <variant>
@@ -331,7 +332,11 @@ struct GameState
     case sf::Event::JoystickButtonReleased:
       return Released<JoystickButton>{ event.joystickButton.joystickId, event.joystickButton.button };
     case sf::Event::JoystickMoved:
-      return Moved<JoystickAxis>{ event.joystickMove.joystickId, event.joystickMove.axis, event.joystickMove.position };
+      return Moved<JoystickAxis>{ 
+          event.joystickMove.joystickId, 
+          static_cast<unsigned int>(event.joystickMove.axis), 
+          event.joystickMove.position 
+      };
 
     case sf::Event::MouseButtonPressed:
       return Pressed<MouseButton>{ event.mouseButton.button, { event.mouseButton.x, event.mouseButton.y } };
@@ -397,7 +402,7 @@ template<typename EventType, typename... Param> void serialize(nlohmann::json &j
 {
   auto make_inner = [&]() {
     nlohmann::json innerObj;
-    std::size_t    index = 0;
+    [[maybe_unused]] std::size_t    index = 0;
 
     (innerObj.emplace(EventType::elements[index++], param), ...);
 
