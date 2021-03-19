@@ -34,6 +34,8 @@ jobs:
             - g++-10
             - doxygen
             - python3-pip
+            - pkg-config
+            - libgl1-mesa-dev
       after_script:
         - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER}
     - os: linux
@@ -52,6 +54,8 @@ jobs:
             - clang++-11
             - doxygen
             - python3-pip
+            - pkg-config
+            - libgl1-mesa-dev
 
 
 before_script:
