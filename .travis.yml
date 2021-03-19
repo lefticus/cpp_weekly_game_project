@@ -17,7 +17,12 @@ jobs:
       osx_image: xcode12.2    # Let's hope this gets us a more current clang
       env:
         - MACOSX_DEPLOYMENT_TARGET=10.15
-        - MATRIX_EVAL=""
+        - LLVM_VER="11"
+        - MATRIX_EVAL="CC=clang-${LLVM_VER} && CXX=clang++-${LLVM_VER}"
+      addons:
+        homebrew:
+          packages:
+            - llvm@11
     - os: linux
       dist: bionic
       compiler: gcc
