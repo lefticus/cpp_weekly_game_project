@@ -18,7 +18,15 @@ jobs:
       env:
         - MACOSX_DEPLOYMENT_TARGET=10.15
         - LLVM_VER="11"
+        - CPPFLAGS="-I/usr/local/opt/llvm/include"
+        - LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
         - MATRIX_EVAL="CC=clang-${LLVM_VER} && CXX=clang++-${LLVM_VER}"
+        - PATH="/usr/local/opt/llvm/bin:$PATH"
+        - PKG_CONFIG_PATH="/usr/local/opt/libffi/lib/pkgconfig"
+
+        #For compilers to find libffi you may need to set:
+#        - LDFLAGS="-L/usr/local/opt/libffi/lib"
+#        - CPPFLAGS="-I/usr/local/opt/libffi/include"
       addons:
         homebrew:
           packages:
