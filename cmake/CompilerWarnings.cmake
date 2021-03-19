@@ -60,6 +60,10 @@ function(set_project_warnings project_name)
       -Wdouble-promotion # warn if float is implicit promoted to double
       -Wformat=2 # warn on security issues around functions that format output
                  # (ie printf)
+
+      # Clang doesn't recognize [[likely]] and [[unlikely]] yet.
+      # This shouldn't be here, but it fixes the linux clang build
+      -Wno-unknown-attributes
   )
 
   if (WARNINGS_AS_ERRORS)
