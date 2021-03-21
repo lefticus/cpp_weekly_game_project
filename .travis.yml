@@ -1,15 +1,13 @@
 language: cpp
-python:
-  - 3.8
-  
+
 install:
-  - which pip
-  - which pip3
-  - ls -al `which pip`*
-  - pip --version
-  - pip3 --version
-  - pip3 install --user conan cmake
-  
+  # Pip cannot install Conan without these upgrades
+  - python3 -m pip install --upgrade pip setuptools
+  # Install Conan and CMake >= 3.15
+  - python3 -m pip install conan cmake
+
+  # Fail if we can't run Conan.
+  - conan --version
 
 jobs:
   include:
@@ -24,7 +22,7 @@ jobs:
       dist: bionic
       compiler: gcc
       env:
-        - GCC_VER="9"
+        - GCC_VER="10"
         - MATRIX_EVAL="CC=gcc-${GCC_VER} && CXX=g++-${GCC_VER}"
 
       addons:
@@ -33,11 +31,12 @@ jobs:
             - ubuntu-toolchain-r-test
           packages:
             # I couldn't get ${GCC_VER} in here successfully
-            - gcc-9
-            - g++-9
+            - gcc-10
+            - g++-10
             - doxygen
-            - python3
-            - python3.8
+            - python3-pip
+            - pkg-config
+            - libgl1-mesa-dev
       after_script:
         - bash <(curl -s https://codecov.io/bash) -x /usr/bin/gcov-${GCC_VER}
     - os: linux
@@ -52,6 +51,7 @@ before_script:
   - eval "${MATRIX_EVAL}"
 
 script:
-  - cmake -D ENABLE_COVERAGE:BOOL=TRUE .
-  - cmake --build . -- -j2
+  - mkdir build
+  - cmake -S . -B ./build -D ENABLE_COVERAGE:BOOL=TRUE
+  - cmake --build ./build -- -j2
   - ctest -j2
